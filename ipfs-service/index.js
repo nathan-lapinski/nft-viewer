@@ -1,8 +1,8 @@
-//const express = require('express');
 import express from 'express';
-// const ipfsClient = require('ipfs-http-client');
 import { create } from 'ipfs-http-client'
 
+import multer from "multer";
+const upload = multer({ dest: "uploads/" });
 
 const ipfs = create();
 const app = express();
@@ -14,11 +14,13 @@ app.get('/', (req, res) => {
     return res.send('IPFS Gateway');
 });
 
-app.post('/image_upload', async (req, res) => {
-    const data = req.body;
-    console.log(data);
-    return res.send('success')
-});
+app.post("/image_upload", upload.single("file"), uploadFiles);
+
+function uploadFiles(req, res) {
+    console.log(req.body);
+    console.log(req.file);
+    res.json({ message: "Successfully uploaded file" });
+}
 
 app.post('/upload', async (req, res) => {
     const data = req.body;
@@ -33,7 +35,6 @@ const addFile = async ({ path, content }) => {
     const filesAdded = await ipfs.add(file);
     console.log(filesAdded);
     return filesAdded;
-    // return filesAdded[0].hash;
 }
 
 app.listen(3000, () => {
