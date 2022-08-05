@@ -22,6 +22,15 @@ function uploadFiles(req, res) {
     res.json({ message: "Successfully uploaded file" });
 }
 
+app.post("/image_ipfs", upload.single("file"), uploadFileToIPFS);
+
+async function uploadFileToIPFS(req, res) {
+    const file = { path: 'strangelove', content: Buffer.from(JSON.stringify(req.file))};
+    const fileHash = await ipfs.add(file);
+    console.log(fileHash);
+    return res.send(`https://gateway.ipfs.io/ipfs/${ fileHash }`);
+}
+
 app.post('/upload', async (req, res) => {
     const data = req.body;
     console.log(data);
