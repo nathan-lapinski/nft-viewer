@@ -2,6 +2,8 @@
 WIP. Project for generating images, storing the images/metadata on IPFS, and then minting them as NFTs on the Ethereum blockchain.
 
 It contains the following services/folders:
+- fe
+-- run this to see the finished product. An initial image will load, then it will be replaced with an NFT image
 - ipfs-service
 -- API for receiving data and uploading it to ipfs
 - nft-generator
