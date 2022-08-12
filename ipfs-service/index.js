@@ -2,6 +2,17 @@ import express from 'express';
 import { create } from 'ipfs-http-client'
 
 import multer from "multer";
+
+import axios from 'axios';
+import FormData from 'form-data';
+import fs from 'fs';
+import dotenv from 'dotenv';
+import * as path from 'path';
+import { fileURLToPath } from 'url';
+const __dirname = path.dirname(fileURLToPath(import.meta.url));
+dotenv.config({ path: path.resolve(__dirname, "./.env") });
+
+
 const upload = multer({ dest: "uploads/" });
 
 const ipfs = create();
@@ -45,6 +56,27 @@ const addFile = async ({ path, content }) => {
     console.log(filesAdded);
     return filesAdded;
 }
+
+app.post('/pinata_upload', async (req, res) => {
+    const data = new FormData();
+    data.append('file', fs.createReadStream('./files/test_123.jpeg'));
+    data.append('pinataOptions', '{"cidVersion": 1}');
+    data.append('pinataMetadata', '{"name": "MyFile", "keyvalues": {"company": "Pinata"}}');
+
+    const config = {
+        method: 'post',
+        url: 'https://api.pinata.cloud/pinning/pinFileToIPFS',
+        headers: { 
+            'Authorization': `Bearer ${process.env.PINATA_TOKEN}`, 
+            ...data.getHeaders()
+        },
+        data : data
+    };
+
+    const resp = await axios(config);
+    console.log(resp.data);
+    return res.send('hi');
+});
 
 app.listen(3000, () => {
     console.log('Server running on port 3000');
