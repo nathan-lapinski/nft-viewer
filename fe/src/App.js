@@ -22,21 +22,9 @@ const Card = () => {
         <img src={imgUrl || "img.jpeg"} alt="John" style={{ width: "100%" }} />
         <h1>Dr.Strangelove</h1>
         <p className="title">CTO &amp; Founder, Mad Scientist</p>
-        <p>Harvard University</p>
-        <a href="#">
-          <i className="fa fa-dribbble" />
-        </a>
-        <a href="#">
-          <i className="fa fa-twitter" />
-        </a>
-        <a href="#">
-          <i className="fa fa-linkedin" />
-        </a>
-        <a href="#">
-          <i className="fa fa-facebook" />
-        </a>
+        <p>MIT</p>
         <p>
-          <button>Contact</button>
+          <button>Follow</button>
         </p>
       </div>
     </div>
