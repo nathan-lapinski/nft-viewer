@@ -49,6 +49,22 @@ app.post('/test_send', upload.single('file'), async (req, res) => {
     const resp = await axios(config);
     console.log(resp.data);
     // TODO: Forward IPFS metadata to minting service for minting on blockchain
+    const CID = resp.data.IpfsHash;
+
+    if (!CID) {
+        return res.send('failed to find CID in IPFS result');
+    }
+
+    const r = await axios({
+        method: 'post',
+        url: 'http://127.0.0.1:4000/mint',
+        data: {
+          cid: CID
+        }
+      });
+
+    console.log(r)
+      
     return res.send(`success`);
 });
 
