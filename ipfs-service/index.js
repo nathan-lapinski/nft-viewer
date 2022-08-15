@@ -25,6 +25,33 @@ app.get('/', (req, res) => {
     return res.send('IPFS Gateway');
 });
 
+app.post('/test_send', upload.single('file'), async (req, res) => {
+    const d = req.file;
+    console.log(d);
+
+    console.log('FILE has been received from node. About to send to IPFS...');
+
+    const data = new FormData();
+    data.append('file', fs.createReadStream(d.path));
+    data.append('pinataOptions', '{"cidVersion": 1}');
+    data.append('pinataMetadata', '{"name": "MyFile", "keyvalues": {"company": "Pinata"}}');
+
+    const config = {
+        method: 'post',
+        url: 'https://api.pinata.cloud/pinning/pinFileToIPFS',
+        headers: { 
+            'Authorization': `Bearer ${process.env.PINATA_TOKEN}`, 
+            ...data.getHeaders()
+        },
+        data : data
+    };
+
+    const resp = await axios(config);
+    console.log(resp.data);
+    // TODO: Forward IPFS metadata to minting service for minting on blockchain
+    return res.send(`success`);
+});
+
 app.post("/image_upload", upload.single("file"), uploadFiles);
 
 function uploadFiles(req, res) {
