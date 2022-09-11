@@ -30,11 +30,6 @@ const contractAddress = "0x0A3101077F080cF9FEDdf88dd94D14C5Ab7E50d3";
 // Create a contract instance
 const myNftContract = new ethers.Contract(contractAddress, abi, signer);
 
-// TODO: This should be created dynamically, based on the CID we receive from Pinata/IPFS.
-// Currently, it will always write the same image file, which is not usable outside of testing.
-const tokenUri =
-  "https://gateway.pinata.cloud/ipfs/QmQ5pt4GTqzwXRKniwsdJc1RM3cTkG5tyVcXzsuwZ1USWi";
-
 app.get("/", (req, res) => {
   res.send("success from NFT");
 });

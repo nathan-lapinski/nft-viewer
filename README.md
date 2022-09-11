@@ -1,18 +1,22 @@
 # nft-viewer
 
-WIP. Project for generating images, storing the images/metadata on IPFS, and then minting them as NFTs on the Ethereum blockchain.
+Project for generating images, storing the images/metadata on IPFS, and then minting them as NFTs on the Ethereum blockchain.
 
 It contains the following services/folders:
 
-- fe
+- fe (WIP - unstable)
   -- run this to see the finished product. An initial image will load, then it will be replaced with an NFT image
-- ipfs-service
-  -- API for receiving data and uploading it to ipfs
 - nft-generator
-  -- generates random images and jpegs.
-- nft-minter (wip)
-  -- For sending transactions to Ethereum to mint NFTs
+  -- Generates random jpegs
+- ipfs-service
+  -- API for receiving image data and uploading it to ipfs
 - smart-contracts
-  -- contains contracts for minting NFTs. Will likely be merted with nft-minter
+  -- Contains contracts for minting NFTs.
+  -- Contains Express api for sending transactions to Ethereum to mint NFTs
 
-Currently all services communicate over HTTP. In future it's probably better to use grpc and put these up on AWS.
+Currently all services communicate over HTTP. In future it's worth explorign gRPC
+
+# setup and run
+run `npm i` within `nft-generator`, `ipfs-service`, and `smart-contracts`.
+
+TBD
