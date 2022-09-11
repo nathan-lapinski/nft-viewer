@@ -187,6 +187,24 @@ const MintNFTButton = () => {
   )
 };
 
+const TestImageGen = () => {
+  const [imgUrl, setImgUrl] = useState();
+  const testGen = () => {
+    // Hit image gen endpoint
+  }
+
+  return (
+    <div>
+      <button onClick={() => testGen()}>
+        TEST IMAGE GEN
+      </button>
+      {imgUrl && 
+        (<img src={imgUrl} />)
+      }
+    </div>
+  )
+}
+
 const App = () => {
   
   return (
@@ -195,6 +213,7 @@ const App = () => {
       <Profile />
       <Card />
       <MintNFTButton />
+      <TestImageGen />
     </WagmiConfig>
   )
 }

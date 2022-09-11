@@ -28,8 +28,6 @@ for (let i = 0; i < 4; i++) {
     }
   }
 
-// console.log('<img src="' + canvas.toDataURL() + '" />')
-
 const imgName = `/images/test_${Date.now()}.jpeg`;
 
 const out = fs.createWriteStream(__dirname + imgName)
