@@ -86,10 +86,6 @@ const Card = () => {
         <img src={imgUrl || "img.jpeg"} alt="John" style={{ width: "100%" }} />
         <h1>Dr.Strangelove</h1>
         <p className="title">CTO &amp; Founder, Mad Scientist</p>
-        <p>MIT</p>
-        <p>
-          <button>Follow</button>
-        </p>
       </div>
     </div>
   );
@@ -159,7 +155,39 @@ const ConnectToWeb3 = () => {
   );
 };
 
-const MintNFTButton = () => {
+const PinToIPFS = (props) => {
+  const [cid, setCid] = useState();
+  console.log(props)
+
+  useEffect(() => {
+    if (props.imgId && !cid) {
+    fetch('http://localhost:4009/pin', {
+      method: "POST",
+      mode: "cors",
+      headers: {
+        'Content-Type': "application/json",
+      },
+      body: JSON.stringify({imgId: props.imgId})
+    }).then(res => res.json()).then(res => {
+
+      console.log("GOT ", res)
+      if (res.cid) {
+        setCid(res.cid);
+      } else {
+        console.log(`Error from pinning service ${res}`);
+      }
+    });
+  }
+  }, [props.imgId]);
+
+  if (!cid) {
+    return null;
+  }
+
+  return (<MintNFTButton contentId={cid} />)
+}
+
+const MintNFTButton = (props) => {
   const {
     config,
     error: prepareError,
@@ -170,14 +198,15 @@ const MintNFTButton = () => {
     functionName: "mintNFT",
     args: [
       "0x278fC1451C73a47696bbDb847fc5831A2f1e6Da8",
-      "https://gateway.pinata.cloud/ipfs/QmQ5pt4GTqzwXRKniwsdJc1RM3cTkG5tyVcXzsuwZ1USWi",
+      `https://gateway.pinata.cloud/ipfs/${props.contentId}`
+      // `https://gateway.pinata.cloud/ipfs/QmQ5pt4GTqzwXRKniwsdJc1RM3cTkG5tyVcXzsuwZ1USWi`,
     ],
   });
   const { data, error, isError, write } = useContractWrite(config);
   const { isLoading, isSuccess } = useWaitForTransaction({
     hash: data?.hash,
   });
-
+console.log(props.contentId)
   return (
     <div>
       <button disabled={!write || isLoading} onClick={() => write()}>
@@ -187,7 +216,7 @@ const MintNFTButton = () => {
         <div>
           Successfully minted your NFT!
           <div>
-            <a href={`https://etherscan.io/tx/${data?.hash}`}>Etherscan</a>
+            <a href={`https://etherscan.io/tx/${data?.hash}`}>Etherscan Link</a>
           </div>
         </div>
       )}
@@ -200,14 +229,21 @@ const MintNFTButton = () => {
 
 const TestImageGen = () => {
   const [imgUrl, setImgUrl] = useState();
-  const testGen = () => {
-    // Hit image gen endpoint
+  const [imgId, setImgId] = useState();
+  const testGen = async () => {
+    const imgRes = await fetch('http://localhost:4009/generate').then(res => res.json());
+    console.log(imgRes);
+    setImgUrl(imgRes.url);
+    setImgId(imgRes.imgId);
   };
 
   return (
     <div>
       <button onClick={() => testGen()}>TEST IMAGE GEN</button>
       {imgUrl && <img src={imgUrl} />}
+
+      {/* {imgUrl && (<MintNFTButton imgId={imgUrl}/>)} */}
+      {imgUrl && (<PinToIPFS imgId={imgId}/>)}
     </div>
   );
 };
@@ -218,7 +254,7 @@ const App = () => {
       <ConnectToWeb3 />
       <Profile />
       <Card />
-      <MintNFTButton />
+      {/* <MintNFTButton /> */}
       <TestImageGen />
     </WagmiConfig>
   );
