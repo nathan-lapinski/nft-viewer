@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useContext, useEffect, useState } from "react";
 import "./App.css";
 import {
   WagmiConfig,
@@ -19,10 +19,7 @@ import MintNFT from "./data/MintNFT.json";
 import { alchemyProvider } from "wagmi/providers/alchemy";
 import { publicProvider } from "wagmi/providers/public";
 
-import { CoinbaseWalletConnector } from "wagmi/connectors/coinbaseWallet";
-import { InjectedConnector } from "wagmi/connectors/injected";
 import { MetaMaskConnector } from "wagmi/connectors/metaMask";
-import { WalletConnectConnector } from "wagmi/connectors/walletConnect";
 import { ALCHEMY_API_KEY } from "./config/config";
 
 // Configure chains & providers with the Alchemy provider.
@@ -37,45 +34,16 @@ const client = createClient({
   autoConnect: true,
   connectors: [
     new MetaMaskConnector({ chains }),
-    new CoinbaseWalletConnector({
-      chains,
-      options: {
-        appName: "wagmi",
-      },
-    }),
-    new WalletConnectConnector({
-      chains,
-      options: {
-        qrcode: true,
-      },
-    }),
-    new InjectedConnector({
-      chains,
-      options: {
-        name: "Injected",
-        shimDisconnect: true,
-      },
-    }),
   ],
   provider,
   webSocketProvider,
 });
 
 const URL_BASE = "https://gateway.pinata.cloud/ipfs/";
+// Profile card with NFT Avatar, or regular fallback image
 const Card = () => {
-  const [imgUrl, setImgUrl] = useState("");
-  useEffect(() => {
-    // Fetch pinned data
-    fetch(
-      "https://gateway.pinata.cloud/ipfs/QmQ5pt4GTqzwXRKniwsdJc1RM3cTkG5tyVcXzsuwZ1USWi"
-    )
-      .then((res) => res.json())
-      .then((data) => {
-        console.log(data);
-        setImgUrl(`${URL_BASE}${data.image.substring(7)}`);
-      })
-      .catch(console.log);
-  }, []);
+  const {contentId} = useContext(UserContext);
+  const imgUrl = contentId ? `${URL_BASE}${contentId}` : 'img.jpeg';
   return (
     <div>
       <link
@@ -83,18 +51,15 @@ const Card = () => {
         href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css"
       />
       <div className="card">
-        <img src={imgUrl || "img.jpeg"} alt="John" style={{ width: "100%" }} />
+        <img src={imgUrl} alt="Dr.Strangelove" style={{ width: "100%" }} />
         <h1>Dr.Strangelove</h1>
         <p className="title">CTO &amp; Founder, Mad Scientist</p>
-        <p>MIT</p>
-        <p>
-          <button>Follow</button>
-        </p>
       </div>
     </div>
   );
 };
 
+// Handles connection to Wallet
 export function Profile() {
   const { address, connector, isConnected } = useAccount();
   const { data: ensAvatar } = useEnsAvatar({ addressOrName: address });
@@ -159,7 +124,39 @@ const ConnectToWeb3 = () => {
   );
 };
 
-const MintNFTButton = () => {
+const PinToIPFS = (props) => {
+  const [cid, setCid] = useState();
+  console.log(props)
+
+  useEffect(() => {
+    if (props.imgId && !cid) {
+    fetch('http://localhost:4009/pin', {
+      method: "POST",
+      mode: "cors",
+      headers: {
+        'Content-Type': "application/json",
+      },
+      body: JSON.stringify({imgId: props.imgId})
+    }).then(res => res.json()).then(res => {
+
+      console.log("GOT ", res)
+      if (res.cid) {
+        setCid(res.cid);
+      } else {
+        console.log(`Error from pinning service ${res}`);
+      }
+    });
+  }
+  }, [props.imgId]);
+
+  if (!cid) {
+    return null;
+  }
+
+  return (<MintNFTButton contentId={cid} />)
+}
+
+const MintNFTButton = (props) => {
   const {
     config,
     error: prepareError,
@@ -170,14 +167,19 @@ const MintNFTButton = () => {
     functionName: "mintNFT",
     args: [
       "0x278fC1451C73a47696bbDb847fc5831A2f1e6Da8",
-      "https://gateway.pinata.cloud/ipfs/QmQ5pt4GTqzwXRKniwsdJc1RM3cTkG5tyVcXzsuwZ1USWi",
+      `https://gateway.pinata.cloud/ipfs/${props.contentId}`
     ],
   });
   const { data, error, isError, write } = useContractWrite(config);
   const { isLoading, isSuccess } = useWaitForTransaction({
     hash: data?.hash,
   });
+  const {update} = useContext(UserContext);
 
+  if (isSuccess) {
+    console.log(`successfully minted. updating avatar...`);
+    update(props.contentId);
+  }
   return (
     <div>
       <button disabled={!write || isLoading} onClick={() => write()}>
@@ -187,7 +189,7 @@ const MintNFTButton = () => {
         <div>
           Successfully minted your NFT!
           <div>
-            <a href={`https://etherscan.io/tx/${data?.hash}`}>Etherscan</a>
+            <a href={`https://etherscan.io/tx/${data?.hash}`}>Etherscan Link</a>
           </div>
         </div>
       )}
@@ -198,28 +200,42 @@ const MintNFTButton = () => {
   );
 };
 
-const TestImageGen = () => {
+const ImageGen = () => {
   const [imgUrl, setImgUrl] = useState();
-  const testGen = () => {
-    // Hit image gen endpoint
+  const [imgId, setImgId] = useState();
+  const testGen = async () => {
+    const imgRes = await fetch('http://localhost:4009/generate').then(res => res.json());
+    console.log(imgRes);
+    setImgUrl(imgRes.url);
+    setImgId(imgRes.imgId);
   };
 
   return (
     <div>
       <button onClick={() => testGen()}>TEST IMAGE GEN</button>
       {imgUrl && <img src={imgUrl} />}
+
+      {imgUrl && (<PinToIPFS imgId={imgId}/>)}
     </div>
   );
 };
 
+const UserContext = React.createContext();
+const UserProvider = ({children}) => {
+  const [contentId, update] = useState(undefined);
+  const value = {contentId, update};
+  return <UserContext.Provider value={value}>{children}</UserContext.Provider>
+}
+
 const App = () => {
   return (
     <WagmiConfig client={client}>
-      <ConnectToWeb3 />
-      <Profile />
-      <Card />
-      <MintNFTButton />
-      <TestImageGen />
+      <UserProvider>
+        <ConnectToWeb3 />
+        <Profile />
+        <Card />
+        <ImageGen />
+      </UserProvider>
     </WagmiConfig>
   );
 };
