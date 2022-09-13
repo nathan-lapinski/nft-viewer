@@ -189,7 +189,7 @@ const MintNFTButton = (props) => {
         <div>
           Successfully minted your NFT!
           <div>
-            <a href={`https://etherscan.io/tx/${data?.hash}`}>Etherscan Link</a>
+            <a href={`https://goerli.etherscan.io/tx/${data?.hash}`}>Etherscan Link</a>
           </div>
         </div>
       )}
